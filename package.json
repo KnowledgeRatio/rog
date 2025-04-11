@@ -1,0 +1,24 @@
+{
+  "name": "rogresearch",
+  "version": "1.0.0",
+  "description": "Research project with Ollama integration for content verification and disinformation detection",
+  "main": "ollama-test.js",
+  "scripts": {
+    // Test script: runs the basic Ollama connectivity test
+    "test": "node ollama-test.js",
+    // Start script: runs the Semantic Kernel with Ollama integration
+    "start": "node semantic-kernel-ollama.js"
+  },
+  "dependencies": {
+    // HTTP client for making requests to the Ollama API
+    "node-fetch": "^2.6.9",
+    // Microsoft's Semantic Kernel SDK for AI orchestration
+    "@microsoft/semantic-kernel": "^1.0.0",
+    // Semantic Kernel connector for Ollama integration
+    "@microsoft/semantic-kernel-connectors-ollama": "^1.0.0",
+    // Environment variable management
+    "dotenv": "^16.0.3"
+  },
+  // Set module type to ESM for modern import/export syntax
+  "type": "module"
+}

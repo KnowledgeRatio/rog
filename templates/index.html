@@ -1,0 +1,222 @@
+<!-- 
+  Web interface for Rog Research Content Verification Tool
+  
+  This HTML template provides a user-friendly interface for content verification.
+  It includes:
+  - A form for submitting content to verify
+  - Two verification options (enhanced and legacy)
+  - Loading indicators and error handling
+  - Result display with formatting
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rog Research - Content Verification Tool</title>
+    <!-- 
+      Inline CSS styles for the interface
+      Using a simple, clean design with responsive layout
+      Contains styling for:
+      - Overall page layout
+      - Form elements
+      - Buttons (including states)
+      - Result and error display areas
+      - Loading indicator
+    -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .container {
+            margin-top: 30px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin-top: 6px;
+            margin-bottom: 16px;
+            resize: vertical;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 30px;
+            border-left: 4px solid #2c3e50;
+            padding-left: 20px;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 4px;
+            display: none;
+        }
+        .loading {
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+        }
+        .error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main heading -->
+    <h1>Róg - Content Verification Agent</h1>
+    <!-- Introductory text explaining the tool -->
+    <p>
+        This tool uses the research preview of Róg, a 'small' language model project to defend against the threat of misinformation, disinformation and 'active measures'.
+        Enter the content you want to verify.
+    </p>
+    <p>
+        <strong>Enhanced with Semantic Kernel and llm-axe</strong> - Using both local analysis and internet verification.
+    </p>
+
+    <!-- Main container for the form and results -->
+    <div class="container">
+        <!-- Content submission form -->
+        <form id="verification-form">
+            <label for="content">Content to verify:</label>
+            <textarea id="content" name="content" placeholder="Paste or type the content you want to verify..."></textarea>
+            <!-- 
+              Two verification options:
+              1. Enhanced verification with Semantic Kernel and llm-axe
+              2. Legacy verification with only llm-axe (for comparison)
+            -->
+            <button type="submit" id="verify-btn">Verify Content</button>
+            <button type="button" id="legacy-verify-btn">Legacy Verify (llm-axe only)</button>
+        </form>
+        
+        <!-- Loading indicator shown during processing -->
+        <div class="loading" id="loading">
+            <p>Analyzing content with Róg (this may take a moment)...</p>
+        </div>
+
+        <!-- Error display area for error messages -->
+        <div class="error" id="error">
+            <p id="error-message"></p>
+        </div>
+
+        <!-- Result display area for verification results -->
+        <div class="result" id="result">
+            <h2>Verification Result</h2>
+            <div id="result-content"></div>
+        </div>
+    </div>
+
+    <!-- 
+      JavaScript code for form handling and API interactions
+      This script:
+      1. Sets up event listeners for form submission
+      2. Handles form submission for both verification methods
+      3. Shows/hides loading indicators and error messages
+      4. Displays verification results
+      5. Handles error conditions
+    -->
+    <script>
+        // Event listener for the enhanced verification form
+        document.getElementById('verification-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await verifyContent('/verify', true);
+        });
+        
+        // Event listener for the legacy verification button
+        document.getElementById('legacy-verify-btn').addEventListener('click', async function() {
+            await verifyContent('/verify-legacy', false);
+        });
+        
+        /**
+         * Function to handle content verification
+         * 
+         * @param {string} endpoint - The API endpoint to use (/verify or /verify-legacy)
+         * @param {boolean} isEnhanced - Whether this is the enhanced verification method
+         */
+        async function verifyContent(endpoint, isEnhanced) {
+            const content = document.getElementById('content').value.trim();
+            if (!content) {
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error-message').textContent = 'Please enter content to verify.';
+                return;
+            }
+            
+            // Hide previous results and errors
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            
+            // Show loading indicator
+            document.getElementById('loading').style.display = 'block';
+            
+            // Disable submit buttons to prevent multiple submissions
+            document.getElementById('verify-btn').disabled = true;
+            document.getElementById('legacy-verify-btn').disabled = true;
+            
+            try {
+                // Send the content to the server for verification
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ content })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Display the verification result
+                    document.getElementById('result').style.display = 'block';
+                    document.getElementById('result-content').innerHTML = data.result.replace(/\n/g, '<br>');
+                } else {
+                    // Display any error from the server
+                    document.getElementById('error').style.display = 'block';
+                    document.getElementById('error-message').textContent = data.error || 'An error occurred during verification.';
+                }
+            } catch (error) {
+                // Handle network or other errors
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error-message').textContent = 'Network error. Please try again.';
+                console.error('Error in verification:', error);
+            } finally {
+                // Hide loading indicator
+                document.getElementById('loading').style.display = 'none';
+                
+                // Enable submit buttons
+                document.getElementById('verify-btn').disabled = false;
+                document.getElementById('legacy-verify-btn').disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
